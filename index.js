@@ -6,9 +6,21 @@ import os from 'node:os'
 const [, , inputFilePath] = process.argv
 
 let filePath
+let journalEntries = []
 
 try {
   filePath = path.normalize(inputFilePath)
+
+  if (fs.existsSync(filePath)) {
+    const fileLogEntries = fs.readFileSync(filePath).toString().split('\n')
+
+    fileLogEntries.pop()
+
+    journalEntries = fileLogEntries.map((logEntry) => {
+      const splitString = logEntry.split('] ')
+      return { date: `${splitString[0]}]`, entry: `${splitString[1]}` }
+    })
+  }
 } catch (error) {
   process.stderr.write(error)
 }
@@ -34,23 +46,7 @@ rl.on('line', (line) => {
   }
 
   case 'l': {
-    console.time('Time it took to gather data')
-
-    if (fs.existsSync(filePath)) {
-      const logEntries = fs.readFileSync(filePath).toString().split('\n')
-
-      logEntries.pop()
-
-      const test = logEntries.map((logEntry) => {
-        const splitString = logEntry.split('] ')
-        return { Date: `${splitString[0]}]`, Entry: `${splitString[1]}` }
-      })
-      console.table(test)
-    } else {
-      console.log('No logs in the journal yet')
-    }
-
-    console.timeEnd('Time it took to gather data')
+    console.table(journalEntries.length === 0 ? 'No entries' : journalEntries)
     break
   }
 
@@ -58,17 +54,20 @@ rl.on('line', (line) => {
     console.log(`
     Running Operating System: ${os.type()}
     Working Directory: ${process.cwd()}
-    Program Uptime: ${Math.floor(process.uptime())} ${Math.floor(process.uptime()) > 1 ? 'seconds' : 'second'}`)
+    Program Uptime: ${Math.floor(process.uptime())} ${Math.floor(process.uptime()) > 1 ? 'seconds' : 'second'}
+    Number of Entries: ${journalEntries.length}
+    Date of Last Entry: ${journalEntries[journalEntries.length - 1].date}
+    `)
     break
   }
 
   case 'h': {
     console.log(`
-  L - Show log entries
-  S - Program Statistics
-  H - Show all commands
-  Q - Quit Program
-  Any sentence - Add new log entry`)
+    L - Show log entries
+    S - Program Statistics
+    H - Show all commands
+    Q - Quit Program
+    Any sentence - Add new log entry`)
     break
   }
 
@@ -79,7 +78,12 @@ rl.on('line', (line) => {
       .split(' ')
       .slice(0, 5)
       .join(' ')
-    fs.appendFileSync(filePath, `[${currentTime}] ${line}\n`)
+
+    const journalEntry = { date: `[${currentTime}]`, entry: `${line}` }
+
+    journalEntries.push(journalEntry)
+
+    fs.appendFileSync(filePath, `${journalEntry.date} ${journalEntry.entry}\n`)
 
     console.timeEnd('Time it took to add entry')
     break
