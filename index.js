@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import readline from 'node:readline'
 import os from 'node:os'
+import readline from 'node:readline'
 
 const [, , inputFilePath] = process.argv
 
@@ -55,8 +55,8 @@ rl.on('line', (line) => {
     Running Operating System: ${os.type()}
     Working Directory: ${process.cwd()}
     Program Uptime: ${Math.floor(process.uptime())} ${Math.floor(process.uptime()) > 1 ? 'seconds' : 'second'}
-    Number of Entries: ${journalEntries.length}
-    Date of Last Entry: ${journalEntries[journalEntries.length - 1].date}
+    Number of Entries: ${journalEntries.length === 0 ? 0 : journalEntries.length}
+    Date of Last Entry: ${journalEntries.length === 0 ? 'No entries yet' : journalEntries[journalEntries.length - 1].date}
     `)
     break
   }
